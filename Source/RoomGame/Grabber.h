@@ -47,4 +47,5 @@ private:
 
 	// Return hit for first physics body in reach
 	const FHitResult GetFirstPhysicsBodyInReact();
+	void setStateReachLineStartandEnd();
 };

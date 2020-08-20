@@ -7,6 +7,7 @@
 #include "Engine/TriggerVolume.h"
 #include "OpenDoor.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnOpenRequest);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ROOMGAME_API UOpenDoor : public UActorComponent
@@ -23,24 +24,29 @@ protected:
 
 	void OpenDoor();
 	void CloseDoor();
+	float GetTotalMassOfActorsOnPlate();
 
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	UPROPERTY(BlueprintAssignable)
+	FOnOpenRequest OnOpenRequest;
+
 private:
-		AActor* mCharacter;
+	AActor* mCharacter;
 
-		UPROPERTY(EditAnywhere)
-		float openAngle = -90.0f;
+	UPROPERTY(EditAnywhere)
+	float openAngle = -90.0f;
 
-		UPROPERTY(EditAnywhere)
-		ATriggerVolume* PressurePlate;
+	UPROPERTY(EditAnywhere)
+	float triggerMass = 50.0f;
 
-		UPROPERTY(EditAnywhere)
-		float DoorCloseDelay = 1.f;
+	UPROPERTY(EditAnywhere)
+	float DoorCloseDelay = 1.f;
 
-		float LastDoorOpenTime;
+	UPROPERTY(EditAnywhere)
+	ATriggerVolume* PressurePlate = nullptr;
 
-		AActor* ActorThatOpens;
+	float LastDoorOpenTime;
 };

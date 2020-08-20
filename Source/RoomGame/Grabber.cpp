@@ -19,8 +19,6 @@ UGrabber::UGrabber()
 
 void UGrabber::Grab()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Grab pressed"));
-
 	// LINE TRACE and see if we reach any actors with physics body collision channel is set
 	auto HitResult = GetFirstPhysicsBodyInReact();
 	auto ComponentToGrab = HitResult.GetComponent();
@@ -34,6 +32,7 @@ void UGrabber::Grab()
 		//	ComponentToGrab,
 		//	NAME_None,
 		//	ComponentToGrab->GetOwner()->GetActorLocation());
+		if (!PhysicsHandler) return;
 		PhysicsHandler->GrabComponentAtLocationWithRotation(
 			ComponentToGrab,
 			NAME_None,
@@ -45,9 +44,7 @@ void UGrabber::Grab()
 
 void UGrabber::Release()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Grab released"));
-
-	// TODO release physics handle
+	if (!PhysicsHandler) return;
 	PhysicsHandler->ReleaseComponent();
 }
 
@@ -88,28 +85,22 @@ void UGrabber::SetupInputComponent()
 void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	setStateReachLineStartandEnd();
 
+	if (!PhysicsHandler) return;
 	// if the physics handle is attached
 	if (PhysicsHandler->GrabbedComponent)
 	{
 		// move the object that we are holding
-		UE_LOG(LogTemp, Warning, TEXT("teest"))
 		PhysicsHandler->SetTargetLocation(mLineTraceEnd);
 	}
 }
 
 const FHitResult UGrabber::GetFirstPhysicsBodyInReact()
 {
-	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(
-		OUT mPlayerViewPointLocation,
-		OUT mPlayerViewPointRotation
-	);
+	// setup query params
+	FCollisionQueryParams TraceParameters(FName(TEXT("")), false, GetOwner());
 
-	// log for debugging
-	// UE_LOG(LogTemp, Warning, TEXT("Location: %s, Position: %s"), *mPlayerViewPointLocation.ToString(), *mPlayerViewPointRotation.ToString());
-
-	// Draw a red trace in the world to visualise
-	mLineTraceEnd = mPlayerViewPointLocation + mPlayerViewPointRotation.Vector() * mReach;
 	DrawDebugLine(
 		GetWorld(),
 		mPlayerViewPointLocation,
@@ -120,9 +111,6 @@ const FHitResult UGrabber::GetFirstPhysicsBodyInReact()
 		0.f,
 		10.f
 	);
-
-	// setup query params
-	FCollisionQueryParams TraceParameters(FName(TEXT("")), false, GetOwner());
 
 	// Line trace (AKA ray tracing)
 	GetWorld()->LineTraceSingleByObjectType(
@@ -140,4 +128,18 @@ const FHitResult UGrabber::GetFirstPhysicsBodyInReact()
 	}
 
 	return mHit;
+}
+
+void UGrabber::setStateReachLineStartandEnd()
+{
+	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(
+		OUT mPlayerViewPointLocation,
+		OUT mPlayerViewPointRotation
+	);
+
+	// log for debugging
+	// UE_LOG(LogTemp, Warning, TEXT("Location: %s, Position: %s"), *mPlayerViewPointLocation.ToString(), *mPlayerViewPointRotation.ToString());
+
+	// Draw a red trace in the world to visualise
+	mLineTraceEnd = mPlayerViewPointLocation + mPlayerViewPointRotation.Vector() * mReach;
 }
